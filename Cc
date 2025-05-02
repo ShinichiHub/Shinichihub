@@ -6061,8 +6061,12 @@ end)
                 wait(5)
             end
 
-            local finalCFrame = CFrame.new(-39829.8164, 10669.5479, 23009.123)
             if _G.AutoGetLamps then
+                local extraCFrame = CFrame.new(-39908.7578, 10690.8496, 22986.3145, 0.997909248, 0.00107694988, -0.0646221414, -0.00116624858, 0.999998391, -0.00134415214, 0.0646205917, 0.00141670729, 0.99790889)
+                tweenTo(extraCFrame, 4)
+                wait(5)
+
+                local finalCFrame = CFrame.new(-39829.8164, 10669.5479, 23009.123)
                 tweenTo(finalCFrame, 4)
                 wait(2)
 
@@ -9539,43 +9543,38 @@ end);
 
   Volcano:Toggle("Auto Kill Golem", false, function(value)
     _G.KillGolem = value
-    StopTween(_G.KillGolem)
+    StopTween(not value)
 end)
 
 task.spawn(function()
-    while task.wait() do
+    while task.wait(0.2) do
         if _G.KillGolem and World3 then
             pcall(function()
                 local player = game.Players.LocalPlayer
                 local character = player.Character
                 local root = character and character:FindFirstChild("HumanoidRootPart")
 
-                for _, enemy in ipairs(workspace.Enemies:GetChildren()) do
-                    local isGolem = enemy.Name == "Lava Golem"
-                    local hum = enemy:FindFirstChildOfClass("Humanoid")
-                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
+                for _, v in ipairs(workspace.Enemies:GetChildren()) do
+                    local hrp = v:FindFirstChild("HumanoidRootPart")
+                    local hum = v:FindFirstChildOfClass("Humanoid")
 
-                    if hum and hrp and hum.Health > 0 then
+                    if hrp and hum and hum.Health > 0 and root then
                         if (hrp.Position - root.Position).Magnitude <= 300 then
                             hum:ChangeState(15)
                             hum:ChangeState(Enum.HumanoidStateType.Dead)
+                            sethiddenproperty(player, "SimulationRadius", math.huge)
                         end
 
-                        if isGolem then
+                        if v.Name == "Lava Golem" then
                             AutoHaki()
                             EquipWeapon(_G.SelectWeapon)
                             hrp.CanCollide = false
                             hum.WalkSpeed = 0
                             hrp.Size = Vector3.new(50, 50, 50)
+                            topos(hrp.CFrame * CFrame.new(0, 30, 0))
 
-                            local distance = (hrp.Position - root.Position).Magnitude
-                            if distance <= 1000 then
-                                topos(hrp.CFrame * CFrame.new(0, 30, 0))
-                                sethiddenproperty(player, "SimulationRadius", math.huge)
-
-                                repeat task.wait()
-                                until not _G.KillGolem or not enemy.Parent or hum.Health <= 0
-                            end
+                            repeat task.wait()
+                            until not _G.KillGolem or not v.Parent or hum.Health <= 0
                         end
                     end
                 end
