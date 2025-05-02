@@ -9395,7 +9395,7 @@ spawn(function()
             local character = player.Character
             local humanoid = character and character:FindFirstChildOfClass("Humanoid")
             local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-            
+
             if humanoid then
                 humanoid.Sit = false
             end
@@ -9407,7 +9407,10 @@ spawn(function()
                 if skull and rootPart then
                     _G.TweenVolcano = false
 
-                    local info = TweenInfo.new((rootPart.Position - skull.Position).Magnitude / 100, Enum.EasingStyle.Linear)
+                    local distance = (rootPart.Position - skull.Position).Magnitude
+                    local speed = 300
+                    local time = distance / speed
+                    local info = TweenInfo.new(time, Enum.EasingStyle.Linear)
                     local goal = { CFrame = CFrame.new(skull.Position + Vector3.new(0, 5, 0)) }
                     local tween = TweenService:Create(rootPart, info, goal)
                     tween:Play()
@@ -9415,19 +9418,16 @@ spawn(function()
 
                     local button = prehistoricIslandCore:FindFirstChild("Ancient Relic", true)
                     if button and button:IsA("BasePart") then
-                        repeat
-                            wait()
-                        until (rootPart.Position - button.Position).Magnitude <= 10
-                        
+                        repeat wait() until (rootPart.Position - button.Position).Magnitude <= 10
                         firetouchinterest(rootPart, button, 0)
-                        wait(0.2)
+                        wait(6)
                         firetouchinterest(rootPart, button, 1)
                     end
                 end
             end
         end
     end
-end) 
+end)
 
   Volcano:Toggle("Auto Defend Prehistoric", false, function(value)
     _G.DefendVolcano = value
@@ -9546,6 +9546,8 @@ end);
     StopTween(not value)
 end)
 
+local safePos = CFrame.new(0, 1000, 0)
+
 task.spawn(function()
     while task.wait(0.2) do
         if _G.KillGolem and World3 then
@@ -9554,11 +9556,15 @@ task.spawn(function()
                 local character = player.Character
                 local root = character and character:FindFirstChild("HumanoidRootPart")
 
+                local foundEnemy = false
+
                 for _, v in ipairs(workspace.Enemies:GetChildren()) do
                     local hrp = v:FindFirstChild("HumanoidRootPart")
                     local hum = v:FindFirstChildOfClass("Humanoid")
 
                     if hrp and hum and hum.Health > 0 and root then
+                        foundEnemy = true
+
                         if (hrp.Position - root.Position).Magnitude <= 300 then
                             hum:ChangeState(15)
                             hum:ChangeState(Enum.HumanoidStateType.Dead)
@@ -9579,17 +9585,20 @@ task.spawn(function()
                     end
                 end
 
-                if not workspace.Enemies:FindFirstChild("Lava Golem") then
-                    UnEquipWeapon(_G.SelectWeapon)
+                if not foundEnemy then
                     local replica = game.ReplicatedStorage:FindFirstChild("Lava Golem")
                     if replica and replica:FindFirstChild("HumanoidRootPart") then
                         topos(replica.HumanoidRootPart.CFrame * CFrame.new(0, 20, 0))
+                    else
+                        topos(safePos)
                     end
+                    UnEquipWeapon(_G.SelectWeapon)
                 end
             end)
         end
     end
 end)
+
   Volcano:Toggle("Collect Bone", false, function(Value)
       _G.AutoCollectBone = Value    
      StopTween(_G.AutoCollectBone)
