@@ -9123,8 +9123,7 @@ end)
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
-            local gui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-            for _,v in pairs(gui:GetDescendants()) do
+            for _,v in pairs(game:GetService("Workspace"):GetDescendants()) do
                 if v:IsA("TextLabel") and string.find(v.Text, "Obtained <Scrap Metal>") then
                     game.StarterGui:SetCore("SendNotification", {
                         Title = "Scrap Metal",
@@ -9132,6 +9131,7 @@ spawn(function()
                         Duration = 2
                     })
                     wait(1.5)
+                    break 
                 end
             end
         end
