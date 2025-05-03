@@ -9120,10 +9120,11 @@ Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoFarmMaterial = state
 end)
 
+-- Gửi thông báo mỗi khi nhận được Scrap Metal
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
-            for _,v in pairs(game:GetService("Workspace"):GetDescendants()) do
+            for _,v in pairs(game.Players.LocalPlayer.PlayerGui:GetDescendants()) do
                 if v:IsA("TextLabel") and string.find(v.Text, "Obtained <Scrap Metal>") then
                     game.StarterGui:SetCore("SendNotification", {
                         Title = "Scrap Metal",
@@ -9138,6 +9139,7 @@ spawn(function()
     end
 end)
 
+-- Tự động farm nguyên liệu và thực hiện nhiệm vụ
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
