@@ -9118,7 +9118,6 @@ _G.AutoFarmMaterial = false
 
 _G.AutoCraftMagnet = false
 _G.AutoFarmMaterial = false
-_G.AutoFarmMaterial = false
 
 Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoCraftMagnet = state
@@ -9251,7 +9250,6 @@ spawn(function()
         end
     end
 end)
-  
 
    Dragon:Button("Craft Volcanic Magnet",function()
     local args = {
