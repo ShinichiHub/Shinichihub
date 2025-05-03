@@ -9043,13 +9043,27 @@ spawn(function()
 end);
 
 _G.AutoCraftMagnet = false
-_G.AutoFarmMaterial = false
 
 Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoCraftMagnet = state
     _G.AutoFarmMaterial = state
 end)
 
+-- Hàm đếm Scrap Metal trong giao diện Items > Valuable
+function getScrapCount()
+    local count = 0
+    local valFrame = game.Players.LocalPlayer.PlayerGui.Main.Inventory.Frame.Items.VisibleFrame
+    for _, item in pairs(valFrame:GetChildren()) do
+        if item:IsA("ImageButton") and item:FindFirstChild("Amount") and item.Name == "Scrap Metal" then
+            local amtText = item.Amount.Text
+            local num = tonumber(string.match(amtText, "%d+"))
+            if num then count = count + num end
+        end
+    end
+    return count
+end
+
+-- Hiển thị thông báo khi nhặt được Scrap Metal
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
@@ -9061,72 +9075,49 @@ spawn(function()
                         Duration = 2
                     })
                     wait(1.5)
-                    break 
+                    break
                 end
             end
         end
     end
 end)
 
-function AutoHaki()
-    local lp = game.Players.LocalPlayer
-    if not lp.Character:FindFirstChild("HasBuso") then
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
-    end
-end
-
-function topos(Pos)
-    local Char = game.Players.LocalPlayer.Character
-    if Char then
-        Char.HumanoidRootPart.CFrame = Pos
-    end
-end
-
+-- Tự động farm Scrap Metal và làm nhiệm vụ Red Fire
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
-            local scrapCount = 0
-            for _,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-                if v:IsA("Tool") and v.Name == "Scrap Metal" then
-                    scrapCount += 1
-                end
-            end
-            for _,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                if v:IsA("Tool") and v.Name == "Scrap Metal" then
-                    scrapCount += 1
-                end
-            end
+            local scrapCount = getScrapCount()
 
             if scrapCount < 10 then
-                local MMon, MPos, SP
                 if game.PlaceId == 2753915549 then
                     MMon = "Pirate"
-                    MPos = CFrame.new(-967, 13, 4034)
+                    MPos = CFrame.new(-967.433105, 13.5999937, 4034.24707)
                     SP = "Pirate"
                 elseif game.PlaceId == 4442272183 then
                     MMon = "Mercenary"
-                    MPos = CFrame.new(-986, 72, 1088)
+                    MPos = CFrame.new(-986.774475, 72.8755951, 1088.44653)
                     SP = "DressTown"
                 elseif game.PlaceId == 7449423635 then
                     MMon = "Pirate Millionaire"
-                    MPos = CFrame.new(-118, 55, 5649)
+                    MPos = CFrame.new(-118.809372, 55.4874573, 5649.17041)
                     SP = "Default"
                 end
 
                 pcall(function()
                     if workspace.Enemies:FindFirstChild(MMon) then
-                        for _,v in pairs(workspace.Enemies:GetChildren()) do
+                        for i,v in pairs(workspace.Enemies:GetChildren()) do
                             if v.Name == MMon and v.Humanoid.Health > 0 then
                                 repeat wait()
                                     AutoHaki()
                                     StartBring = true
+                                    PosMon = v.HumanoidRootPart.CFrame
                                     v.HumanoidRootPart.CanCollide = false
                                     v.Humanoid.WalkSpeed = 0
                                     topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
                                     game.VirtualUser:CaptureController()
                                     game.VirtualUser:Button1Down(Vector2.new(1280,672))
-                                until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0 or scrapCount >= 10
-                                StartBring = true
+                                until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0 or getScrapCount() >= 10
+                                StartBring = false
                             end
                         end
                     else
@@ -9140,26 +9131,25 @@ spawn(function()
                 end
 
                 local QuestTitle = game.Players.LocalPlayer.PlayerGui.QuestGUI.Title.Text
-                local MobName = ""
                 if string.find(QuestTitle,"Venomous Assailant") then
                     MobName = "Venomous Assailant"
                 elseif string.find(QuestTitle,"Hydra Enforcer") then
                     MobName = "Hydra Enforcer"
-                elseif string.find(QuestTitle,"Tree") then
+                elseif string.find(QuestTitle,"Tree") or string.find(QuestTitle,"Defeat 10 Tree") then
                     MobName = "Tree"
                 end
 
                 if MobName == "Tree" then
                     local treeList = {
-                        CFrame.new(5343, 1011, 343),
-                        CFrame.new(5359, 1011, 368),
-                        CFrame.new(5269, 1011, 333),
-                        CFrame.new(5223, 1011, 420),
-                        CFrame.new(5240, 1011, 445)
+                        CFrame.new(5342.95312, 1011.26703, 343.493988),
+                        CFrame.new(5359.29004, 1011.26703, 368.653992),
+                        CFrame.new(5269.84424, 1011.26703, 333.738007),
+                        CFrame.new(5223.85791, 1011.26703, 420.833008),
+                        CFrame.new(5240.19678, 1011.26703, 445.992004)
                     }
+
                     local weapons = {"Melee","Sword","Gun"}
                     local current = 1
-
                     while _G.AutoCraftMagnet and MobName == "Tree" do
                         for _,pos in ipairs(treeList) do
                             topos(pos * CFrame.new(0,10,0))
@@ -9170,8 +9160,8 @@ spawn(function()
                             wait(5)
                             current = current % #weapons + 1
                             pcall(function()
-                                for _,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                                    if v.ToolTip == weapons[current] or v.Name == weapons[current] then
+                                for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                                    if v.ToolTip == weapons[current] then
                                         game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
                                     end
                                 end
@@ -9181,11 +9171,14 @@ spawn(function()
                 else
                     pcall(function()
                         if workspace.Enemies:FindFirstChild(MobName) then
-                            for _,v in pairs(workspace.Enemies:GetChildren()) do
+                            for i,v in pairs(workspace.Enemies:GetChildren()) do
                                 if v.Name == MobName and v.Humanoid.Health > 0 then
                                     repeat wait()
                                         AutoHaki()
                                         StartBring = true
+                                        PosMon = v.HumanoidRootPart.CFrame
+                                        v.HumanoidRootPart.CanCollide = false
+                                        v.Humanoid.WalkSpeed = 0
                                         topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
                                         game.VirtualUser:CaptureController()
                                         game.VirtualUser:Button1Down(Vector2.new(1280,672))
@@ -9193,6 +9186,8 @@ spawn(function()
                                     StartBring = false
                                 end
                             end
+                        else
+                            topos(CFrame.new(5677, 118, 340))
                         end
                     end)
                 end
