@@ -9113,21 +9113,41 @@ spawn(function()
     end);
 end);
 _G.AutoCraftMagnet = false
-_G.AutoFarmMaterial = false
-_G.AutoFarmMaterial = false
-
-_G.AutoCraftMagnet = false
 
 Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoCraftMagnet = state
     _G.AutoFarmMaterial = state
 end)
 
+local lastScrapCount = 0
+
+spawn(function()
+    while wait(1) do
+        if _G.AutoCraftMagnet then
+            local scrapCount = 0
+            for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+                if v:IsA("Tool") and v.Name == "Scrap Metal" then
+                    scrapCount += 1
+                end
+            end
+
+            if scrapCount > lastScrapCount then
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "Shinichi Hub",
+                    Text = "+1 Scrap Metal ("..scrapCount.."/10)",
+                    Duration = 2
+                })
+            end
+            lastScrapCount = scrapCount
+        end
+    end
+end)
+
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
             local scrapCount = 0
-            for i, v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+            for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
                 if v:IsA("Tool") and v.Name == "Scrap Metal" then
                     scrapCount += 1
                 end
@@ -9150,7 +9170,7 @@ spawn(function()
 
                 pcall(function()
                     if game:GetService("Workspace").Enemies:FindFirstChild(MMon) then
-                        for i, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                        for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                             if v.Name == MMon and v.Humanoid.Health > 0 then
                                 repeat wait()
                                     AutoHaki()
@@ -9171,17 +9191,16 @@ spawn(function()
                 end)
             else
                 if not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("QuestGUI") then
-                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "Red Fire", "1")
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest","Red Fire","1")
                     wait(1)
                 end
 
                 local QuestTitle = game:GetService("Players").LocalPlayer.PlayerGui.QuestGUI.Title.Text
-                local MobName
-                if string.find(QuestTitle, "Venomous Assailant") then
+                if string.find(QuestTitle,"Venomous Assailant") then
                     MobName = "Venomous Assailant"
-                elseif string.find(QuestTitle, "Hydra Enforcer") then
+                elseif string.find(QuestTitle,"Hydra Enforcer") then
                     MobName = "Hydra Enforcer"
-                elseif string.find(QuestTitle, "Tree") or string.find(QuestTitle, "Defeat 10 Tree") then
+                elseif string.find(QuestTitle,"Tree") or string.find(QuestTitle,"Defeat 10 Tree") then
                     MobName = "Tree"
                 end
 
@@ -9194,19 +9213,19 @@ spawn(function()
                         CFrame.new(5240.19678, 1011.26703, 445.992004)
                     }
 
-                    local weapons = {"Melee", "Sword", "Gun"}
+                    local weapons = {"Melee","Sword","Gun"}
                     local current = 1
                     while _G.AutoCraftMagnet and MobName == "Tree" do
-                        for _, pos in ipairs(treeList) do
-                            topos(pos * CFrame.new(0, 10, 0))
+                        for _,pos in ipairs(treeList) do
+                            topos(pos * CFrame.new(0,10,0))
                             wait(0.2)
                             AutoHaki()
                             game:GetService("VirtualUser"):CaptureController()
-                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
                             wait(5)
                             current = current % #weapons + 1
                             pcall(function()
-                                for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                                for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
                                     if v.ToolTip == weapons[current] then
                                         game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
                                     end
@@ -9217,7 +9236,7 @@ spawn(function()
                 else
                     pcall(function()
                         if game:GetService("Workspace").Enemies:FindFirstChild(MobName) then
-                            for i, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                            for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                                 if v.Name == MobName and v.Humanoid.Health > 0 then
                                     repeat wait()
                                         AutoHaki()
@@ -9225,9 +9244,9 @@ spawn(function()
                                         PosMon = v.HumanoidRootPart.CFrame
                                         v.HumanoidRootPart.CanCollide = false
                                         v.Humanoid.WalkSpeed = 0
-                                        topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                        topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
                                         game:GetService("VirtualUser"):CaptureController()
-                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
                                     until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
                                     StartBring = false
                                 end
@@ -9239,17 +9258,6 @@ spawn(function()
                 end
             end
         end
-    end
-end)
-
-game:GetService("Players").LocalPlayer.Backpack.ChildAdded:Connect(function(child)
-    if child.Name == "Scrap Metal" then
-        scrapCount += 1
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Shinichi hub",
-            Text = "+1 Scrap Metal",
-            Duration = 2
-        })
     end
 end)
 
