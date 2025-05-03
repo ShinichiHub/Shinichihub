@@ -6014,78 +6014,7 @@ task.spawn(function()
         end
     end
 end)
-    
-        AutoFarm:Seperator("Draco")
-    
-    AutoFarm:Toggle("Auto Trials Draco V4 [BETA]", false, function(value)
-    _G.AutoGetLamps = value
-    task.spawn(function()
-        while _G.AutoGetLamps do
-            local TweenService = game:GetService("TweenService")
-            local player = game.Players.LocalPlayer
-            local character = player.Character or player.CharacterAdded:Wait()
-            local hrp = character:WaitForChild("HumanoidRootPart")
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Physics) end
-
-            local function tweenTo(cframe, duration)
-                local tweenInfo = TweenInfo.new(duration or 3, Enum.EasingStyle.Linear)
-                local goal = {CFrame = cframe}
-                local tween = TweenService:Create(hrp, tweenInfo, goal)
-                tween:Play()
-
-                repeat
-                    task.wait(0.1)
-                    if not _G.AutoGetLamps then tween:Cancel() return end
-                until (hrp.Position - cframe.Position).Magnitude < 5
-
-                tween:Cancel()
-                hrp.CFrame = cframe
-                wait(1)
-            end
-
-            local sequence = {
-                {cf = CFrame.new(-40184.3359, 9325.25098, 23261.6094), time = 3},
-                {cf = CFrame.new(-40511.5195, 9374.39648, 23461.0664), time = 3},
-                {cf = CFrame.new(-39928.0703, 10683.3232, 22997.6172), time = 3},
-                {cf = CFrame.new(-40043.7031, 9374.39648, 22793.7266), time = 3},
-                {cf = CFrame.new(-39916.7891, 10683.3535, 22998.5039), time = 3},
-                {cf = CFrame.new(-39608.3047, 9374.39746, 23470.6895), time = 6}
-            }
-
-            for _, step in ipairs(sequence) do
-                if not _G.AutoGetLamps then break end
-                character = player.Character or player.CharacterAdded:Wait()
-                hrp = character:WaitForChild("HumanoidRootPart")
-                tweenTo(step.cf, step.time)
-                wait(5)
-            end
-
-            if _G.AutoGetLamps then
-                local extraCFrame = CFrame.new(-39908.7578, 10690.8496, 22986.3145, 0.997909248, 0.00107694988, -0.0646221414, -0.00116624858, 0.999998391, -0.00134415214, 0.0646205917, 0.00141670729, 0.99790889)
-                tweenTo(extraCFrame, 4)
-                wait(5)
-
-                local finalCFrame = CFrame.new(-39829.8164, 10669.5479, 23009.123)
-                tweenTo(finalCFrame, 4)
-                wait(2)
-
-                local prompt = nil
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 20 then
-                        prompt = v
-                        break
-                    end
-                end
-
-                if prompt then
-                    fireproximityprompt(prompt)
-                end
-            end
-        end
-    end)
-end)
-    
+          
         AutoFarm:Seperator("Katakuri Farm")
 
    CakePrinceStatus = AutoFarm:Label("Check Cake Prince")
@@ -9115,7 +9044,7 @@ end);
 
 _G.AutoCraftMagnet = false
 
-Items:Toggle("Auto Craft Magnet", false, function(v)
+Dragon:Toggle("Auto Craft Magnet", false, function(v)
     _G.AutoCraftMagnet = v
     StopTween(not v)
 
@@ -9555,60 +9484,60 @@ end);
   end)
 
   Volcano:Toggle("Auto Kill Golem", false, function(value)
-    _G.KillGolem = value
-    StopTween(not value)
-end)
+      _G.KillGolem = value
+     StopTween(_G.KillGolem)
+  end)
 
-local safePos = CFrame.new(0, 1000, 0)
-
-task.spawn(function()
-    while task.wait(0.2) do
+spawn(function()
+    while wait() do
         if _G.KillGolem and World3 then
             pcall(function()
-                local player = game.Players.LocalPlayer
-                local character = player.Character
-                local root = character and character:FindFirstChild("HumanoidRootPart")
-
-                local foundEnemy = false
-
-                for _, v in ipairs(workspace.Enemies:GetChildren()) do
-                    local hrp = v:FindFirstChild("HumanoidRootPart")
-                    local hum = v:FindFirstChildOfClass("Humanoid")
-
-                    if hrp and hum and hum.Health > 0 and root then
-                        foundEnemy = true
-
-                        if (hrp.Position - root.Position).Magnitude <= 300 then
-                            hum:ChangeState(15)
-                            hum:ChangeState(Enum.HumanoidStateType.Dead)
-                            sethiddenproperty(player, "SimulationRadius", math.huge)
-                        end
-
+                if game:GetService("Workspace").Enemies:FindFirstChild("Lava Golem") then
+                    for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                         if v.Name == "Lava Golem" then
-                            AutoHaki()
-                            EquipWeapon(_G.SelectWeapon)
-                            hrp.CanCollide = false
-                            hum.WalkSpeed = 0
-                            hrp.Size = Vector3.new(50, 50, 50)
-                            topos(hrp.CFrame * CFrame.new(0, 30, 0))
-
-                            repeat task.wait()
-                            until not _G.KillGolem or not v.Parent or hum.Health <= 0
+                            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                                repeat task.wait()
+                                    AutoHaki()
+                                    EquipWeapon(_G.SelectWeapon)
+                                    v.HumanoidRootPart.CanCollide = false
+                                    v.Humanoid.WalkSpeed = 0
+                                    v.HumanoidRootPart.Size = Vector3.new(50,50,50)
+                                    topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                    sethiddenproperty(game.Players.LocalPlayer,"SimulationRadius",math.huge)
+                                until not  _G.KillGolem or not v.Parent or v.Humanoid.Health <= 0
+                            end
                         end
                     end
-                end
-
-                if not foundEnemy then
-                    local replica = game.ReplicatedStorage:FindFirstChild("Lava Golem")
-                    if replica and replica:FindFirstChild("HumanoidRootPart") then
-                        topos(replica.HumanoidRootPart.CFrame * CFrame.new(0, 20, 0))
-                    else
-                        topos(safePos)
+                else
+                 UnEquipWeapon(_G.SelectWeapon)
+                    if game:GetService("ReplicatedStorage"):FindFirstChild("Lava Golem") then
+                        topos(game:GetService("ReplicatedStorage"):FindFirstChild("Lava Golem").HumanoidRootPart.CFrame * CFrame.new(2,20,2))
                     end
-                    UnEquipWeapon(_G.SelectWeapon)
                 end
             end)
         end
+    end
+end)
+
+Volcano:Toggle("Auto Kill Aura Golem", false, function(value)
+    _G.Kill_Aura = value
+end)
+
+task.spawn(function()
+    while true do
+        if _G.Kill_Aura then
+            for _, v in ipairs(workspace.Enemies:GetChildren()) do
+                if v:FindFirstChild("HumanoidRootPart") and
+                (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 100000 then
+                    local humanoid = v:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid:ChangeState(15)
+                        humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+                    end
+                end
+            end
+        end
+        task.wait(1)
     end
 end)
 
@@ -9640,6 +9569,77 @@ spawn(function()
             end)
         end
     end
+end)
+
+AutoFarm:Seperator("Draco")
+    
+    AutoFarm:Toggle("Auto Trials Draco V4 [BETA]", false, function(value)
+    _G.AutoGetLamps = value
+    task.spawn(function()
+        while _G.AutoGetLamps do
+            local TweenService = game:GetService("TweenService")
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Physics) end
+
+            local function tweenTo(cframe, duration)
+                local tweenInfo = TweenInfo.new(duration or 3, Enum.EasingStyle.Linear)
+                local goal = {CFrame = cframe}
+                local tween = TweenService:Create(hrp, tweenInfo, goal)
+                tween:Play()
+
+                repeat
+                    task.wait(0.1)
+                    if not _G.AutoGetLamps then tween:Cancel() return end
+                until (hrp.Position - cframe.Position).Magnitude < 5
+
+                tween:Cancel()
+                hrp.CFrame = cframe
+                wait(1)
+            end
+
+            local sequence = {
+                {cf = CFrame.new(-40184.3359, 9325.25098, 23261.6094), time = 3},
+                {cf = CFrame.new(-40511.5195, 9374.39648, 23461.0664), time = 3},
+                {cf = CFrame.new(-39928.0703, 10683.3232, 22997.6172), time = 3},
+                {cf = CFrame.new(-40043.7031, 9374.39648, 22793.7266), time = 3},
+                {cf = CFrame.new(-39916.7891, 10683.3535, 22998.5039), time = 3},
+                {cf = CFrame.new(-39608.3047, 9374.39746, 23470.6895), time = 6}
+            }
+
+            for _, step in ipairs(sequence) do
+                if not _G.AutoGetLamps then break end
+                character = player.Character or player.CharacterAdded:Wait()
+                hrp = character:WaitForChild("HumanoidRootPart")
+                tweenTo(step.cf, step.time)
+                wait(5)
+            end
+
+            if _G.AutoGetLamps then
+                local extraCFrame = CFrame.new(-39908.7578, 10690.8496, 22986.3145, 0.997909248, 0.00107694988, -0.0646221414, -0.00116624858, 0.999998391, -0.00134415214, 0.0646205917, 0.00141670729, 0.99790889)
+                tweenTo(extraCFrame, 4)
+                wait(5)
+
+                local finalCFrame = CFrame.new(-39829.8164, 10669.5479, 23009.123)
+                tweenTo(finalCFrame, 4)
+                wait(2)
+
+                local prompt = nil
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") and (v.Parent.Position - hrp.Position).Magnitude < 20 then
+                        prompt = v
+                        break
+                    end
+                end
+
+                if prompt then
+                    fireproximityprompt(prompt)
+                end
+            end
+        end
+    end)
 end)
 
     Events:Button("Remove Fog",function()
