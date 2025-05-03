@@ -9115,147 +9115,121 @@ end);
 
 _G.AutoCraftMagnet = false
 
-Dragon:Toggle("Auto Craft Magnet", false, function(state)
-    _G.AutoCraftMagnet = state
-    _G.AutoFarmMaterial = state
-end)
+Items:Toggle("Auto Craft Magnet", false, function(v)
+    _G.AutoCraftMagnet = v
+    StopTween(not v)
 
--- Gửi thông báo mỗi khi nhận được Scrap Metal
-spawn(function()
-    while wait() do
-        if _G.AutoCraftMagnet then
-            for _,v in pairs(game.Players.LocalPlayer.PlayerGui:GetDescendants()) do
-                if v:IsA("TextLabel") and string.find(v.Text, "Obtained <Scrap Metal>") then
-                    game.StarterGui:SetCore("SendNotification", {
-                        Title = "Scrap Metal",
-                        Text = "+1 Scrap Metal",
-                        Duration = 2
-                    })
-                    wait(1.5)
-                    break 
-                end
-            end
-        end
-    end
-end)
-
--- Tự động farm nguyên liệu và thực hiện nhiệm vụ
-spawn(function()
-    while wait() do
-        if _G.AutoCraftMagnet then
+    spawn(function()
+        while _G.AutoCraftMagnet do
             local scrapCount = 0
             for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                if v:IsA("Tool") and v.Name == "Scrap Metal" then
-                    scrapCount += 1
+                if v.Name == "Scrap Metal" then
+                    scrapCount = scrapCount + v:FindFirstChild("Amount").Value
                 end
             end
 
-            if scrapCount < 10 then
-                if game.PlaceId == 2753915549 then
-                    MMon = "Pirate"
-                    MPos = CFrame.new(-967.433105, 13.5999937, 4034.24707)
-                    SP = "Pirate"
-                elseif game.PlaceId == 4442272183 then
-                    MMon = "Mercenary"
-                    MPos = CFrame.new(-986.774475, 72.8755951, 1088.44653)
-                    SP = "DressTown"
-                elseif game.PlaceId == 7449423635 then
-                    MMon = "Pirate Millionaire"
-                    MPos = CFrame.new(-118.809372, 55.4874573, 5649.17041)
-                    SP = "Default"
-                end
-
-                pcall(function()
-                    if workspace.Enemies:FindFirstChild(MMon) then
-                        for i,v in pairs(workspace.Enemies:GetChildren()) do
-                            if v.Name == MMon and v.Humanoid.Health > 0 then
-                                repeat wait()
-                                    AutoHaki()
-                                    StartBring = true
-                                    PosMon = v.HumanoidRootPart.CFrame
-                                    v.HumanoidRootPart.CanCollide = false
-                                    v.Humanoid.WalkSpeed = 0
-                                    topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
-                                    game.VirtualUser:CaptureController()
-                                    game.VirtualUser:Button1Down(Vector2.new(1280,672))
-                                until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0 or scrapCount >= 10
-                                StartBring = false
-                            end
-                        end
-                    else
-                        topos(MPos)
-                    end
-                end)
-            else
-                if not game.Players.LocalPlayer.PlayerGui:FindFirstChild("QuestGUI") then
-                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest","Red Fire","1")
-                    wait(1)
-                end
-
-                local QuestTitle = game.Players.LocalPlayer.PlayerGui.QuestGUI.Title.Text
-                if string.find(QuestTitle,"Venomous Assailant") then
-                    MobName = "Venomous Assailant"
-                elseif string.find(QuestTitle,"Hydra Enforcer") then
-                    MobName = "Hydra Enforcer"
-                elseif string.find(QuestTitle,"Tree") or string.find(QuestTitle,"Defeat 10 Tree") then
-                    MobName = "Tree"
-                end
-
-                if MobName == "Tree" then
-                    local treeList = {
-                        CFrame.new(5342.95312, 1011.26703, 343.493988),
-                        CFrame.new(5359.29004, 1011.26703, 368.653992),
-                        CFrame.new(5269.84424, 1011.26703, 333.738007),
-                        CFrame.new(5223.85791, 1011.26703, 420.833008),
-                        CFrame.new(5240.19678, 1011.26703, 445.992004)
-                    }
-
-                    local weapons = {"Melee","Sword","Gun"}
-                    local current = 1
-                    while _G.AutoCraftMagnet and MobName == "Tree" do
-                        for _,pos in ipairs(treeList) do
-                            topos(pos * CFrame.new(0,10,0))
-                            wait(0.2)
-                            AutoHaki()
-                            game.VirtualUser:CaptureController()
-                            game.VirtualUser:Button1Down(Vector2.new(1280,672))
-                            wait(5)
-                            current = current % #weapons + 1
-                            pcall(function()
-                                for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                                    if v.ToolTip == weapons[current] then
-                                        game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
+            if scrapCount >= 10 then
+                local questDone = false
+                while _G.AutoCraftMagnet and not questDone do
+                    local Quest = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("PlayerQuestProgress", "Red Fire")
+                    if Quest and Quest.Active then
+                        local MobName = Quest.Enemy
+                        if MobName == "Tree" then
+                            local weapons = {"Melee","Sword","Gun"}
+                            local current = 1
+                            for _,pos in ipairs(treeList) do
+                                if not _G.AutoCraftMagnet then break end
+                                topos(pos * CFrame.new(0,10,0))
+                                wait(0.2)
+                                AutoHaki()
+                                game.VirtualUser:CaptureController()
+                                game.VirtualUser:Button1Down(Vector2.new(1280,672))
+                                wait(5)
+                                current = current % #weapons + 1
+                                pcall(function()
+                                    for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                                        if v.ToolTip == weapons[current] then
+                                            game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
+                                        end
                                     end
+                                end)
+                            end
+                        else
+                            pcall(function()
+                                if workspace.Enemies:FindFirstChild(MobName) then
+                                    for i,v in pairs(workspace.Enemies:GetChildren()) do
+                                        if v.Name == MobName and v.Humanoid.Health > 0 then
+                                            repeat wait()
+                                                AutoHaki()
+                                                StartBring = true
+                                                PosMon = v.HumanoidRootPart.CFrame
+                                                v.HumanoidRootPart.CanCollide = false
+                                                v.Humanoid.WalkSpeed = 0
+                                                topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                                game.VirtualUser:CaptureController()
+                                                game.VirtualUser:Button1Down(Vector2.new(1280,672))
+                                            until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
+                                            StartBring = false
+                                        end
+                                    end
+                                else
+                                    topos(CFrame.new(5677, 118, 340))
                                 end
                             end)
                         end
+                    else
+                        topos(CFrame.new(5677, 118, 340))
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "Red Fire")
                     end
+                    wait(1)
+                end
+            else
+                local MobName = game.PlaceId == 4442272183 and "Pirate" or "Brute"
+                if game.PlaceId == 4442272183 then
+                    topos(CFrame.new(-4673, 872, -1915))
                 else
-                    pcall(function()
-                        if workspace.Enemies:FindFirstChild(MobName) then
-                            for i,v in pairs(workspace.Enemies:GetChildren()) do
-                                if v.Name == MobName and v.Humanoid.Health > 0 then
-                                    repeat wait()
-                                        AutoHaki()
-                                        StartBring = true
-                                        PosMon = v.HumanoidRootPart.CFrame
-                                        v.HumanoidRootPart.CanCollide = false
-                                        v.Humanoid.WalkSpeed = 0
-                                        topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
-                                        game.VirtualUser:CaptureController()
-                                        game.VirtualUser:Button1Down(Vector2.new(1280,672))
-                                    until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
-                                    StartBring = false
-                                end
-                            end
-                        else
-                            topos(CFrame.new(5677, 118, 340))
+                    topos(CFrame.new(-292, 519, 5357))
+                end
+                pcall(function()
+                    for i,v in pairs(workspace.Enemies:GetChildren()) do
+                        if v.Name == MobName and v.Humanoid.Health > 0 then
+                            repeat wait()
+                                AutoHaki()
+                                StartBring = true
+                                PosMon = v.HumanoidRootPart.CFrame
+                                v.HumanoidRootPart.CanCollide = false
+                                v.Humanoid.WalkSpeed = 0
+                                topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                game.VirtualUser:CaptureController()
+                                game.VirtualUser:Button1Down(Vector2.new(1280,672))
+                            until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
+                            StartBring = false
                         end
-                    end)
+                    end
+                end)
+            end
+            wait(1)
+        end
+    end)
+
+    spawn(function()
+        while wait(0.1) do
+            if _G.AutoCraftMagnet then
+                for _, gui in ipairs(game.CoreGui:GetDescendants()) do
+                    if gui:IsA("TextLabel") and gui.Text:find("<Scrap Metal>") and not gui:FindFirstChild("AlreadyNotified") then
+                        local tag = Instance.new("BoolValue")
+                        tag.Name = "AlreadyNotified"
+                        tag.Parent = gui
+                        game.StarterGui:SetCore("SendNotification", {
+                            Title = "Scrap Metal",
+                            Text = "+1 Scrap Metal!",
+                            Duration = 2
+                        })
+                    end
                 end
             end
         end
-    end
+    end)
 end)
 
    Dragon:Button("Craft Volcanic Magnet",function()
