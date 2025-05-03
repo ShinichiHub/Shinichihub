@@ -9042,207 +9042,161 @@ spawn(function()
     end);
 end);
 
-Dragon:Toggle("Auto Craft Magnet", false, function(v)
-    _G.AutoCraftMagnet = v
-    StopTween(not v)
+_G.AutoCraftMagnet = false
+_G.AutoFarmMaterial = false
 
-    spawn(function()
-        while _G.AutoCraftMagnet do
+Dragon:Toggle("Auto Craft Magnet", false, function(state)
+    _G.AutoCraftMagnet = state
+    _G.AutoFarmMaterial = state
+end)
+
+spawn(function()
+    while wait() do
+        if _G.AutoCraftMagnet then
+            for _,v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                if v:IsA("TextLabel") and string.find(v.Text, "Obtained <Scrap Metal>") then
+                    game.StarterGui:SetCore("SendNotification", {
+                        Title = "Scrap Metal",
+                        Text = "+1 Scrap Metal",
+                        Duration = 2
+                    })
+                    wait(1.5)
+                    break 
+                end
+            end
+        end
+    end
+end)
+
+function AutoHaki()
+    local lp = game.Players.LocalPlayer
+    if not lp.Character:FindFirstChild("HasBuso") then
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+    end
+end
+
+function topos(Pos)
+    local Char = game.Players.LocalPlayer.Character
+    if Char then
+        Char.HumanoidRootPart.CFrame = Pos
+    end
+end
+
+spawn(function()
+    while wait() do
+        if _G.AutoCraftMagnet then
             local scrapCount = 0
-            for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                if v.Name == "Scrap Metal" then
-                    scrapCount = scrapCount + v:FindFirstChild("Amount").Value
+            for _,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                if v:IsA("Tool") and v.Name == "Scrap Metal" then
+                    scrapCount += 1
+                end
+            end
+            for _,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                if v:IsA("Tool") and v.Name == "Scrap Metal" then
+                    scrapCount += 1
                 end
             end
 
-            if scrapCount >= 10 then
-                -- Notify when 10 Scrap Metal is collected
-                if not _G.DoneScrapNotify then
-                    _G.DoneScrapNotify = true
-                    game.StarterGui:SetCore("SendNotification", {
-                        Title = "Scrap Metal",
-                        Text = "Done 10 Scrap Metal!",
-                        Duration = 3
-                    })
+            if scrapCount < 10 then
+                local MMon, MPos, SP
+                if game.PlaceId == 2753915549 then
+                    MMon = "Pirate"
+                    MPos = CFrame.new(-967, 13, 4034)
+                    SP = "Pirate"
+                elseif game.PlaceId == 4442272183 then
+                    MMon = "Mercenary"
+                    MPos = CFrame.new(-986, 72, 1088)
+                    SP = "DressTown"
+                elseif game.PlaceId == 7449423635 then
+                    MMon = "Pirate Millionaire"
+                    MPos = CFrame.new(-118, 55, 5649)
+                    SP = "Default"
+                end
 
-                    -- Start Red Fire quest after collecting 10 Scrap Metal
-                    if not game.Players.LocalPlayer.PlayerGui:FindFirstChild("QuestGUI") then
-                        game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", "Red Fire", "1")
-                        wait(1)
-                    end
-
-                    -- Detect the quest and determine the MobName
-                    local QuestTitle = game.Players.LocalPlayer.PlayerGui.QuestGUI.Title.Text
-                    local MobName = nil
-                    if string.find(QuestTitle, "Venomous Assailant") then
-                        MobName = "Venomous Assailant"
-                    elseif string.find(QuestTitle, "Hydra Enforcer") then
-                        MobName = "Hydra Enforcer"
-                    elseif string.find(QuestTitle, "Tree") or string.find(QuestTitle, "Defeat 10 Tree") then
-                        MobName = "Tree"
-                    end
-
-                    -- If the quest is Tree-related, start farming trees
-                    if MobName == "Tree" then
-                        local treeList = {
-                            CFrame.new(5342.95312, 1011.26703, 343.493988),
-                            CFrame.new(5359.29004, 1011.26703, 368.653992),
-                            CFrame.new(5269.84424, 1011.26703, 333.738007),
-                            CFrame.new(5223.85791, 1011.26703, 420.833008),
-                            CFrame.new(5240.19678, 1011.26703, 445.992004)
-                        }
-
-                        local weapons = {"Melee", "Sword", "Gun"}
-                        local current = 1
-                        while _G.AutoCraftMagnet and MobName == "Tree" do
-                            for _, pos in ipairs(treeList) do
-                                topos(pos * CFrame.new(0, 10, 0))
-                                wait(0.2)
-                                AutoHaki()
-                                game.VirtualUser:CaptureController()
-                                game.VirtualUser:Button1Down(Vector2.new(1280, 672))
-                                wait(5)
-                                current = current % #weapons + 1
-                                pcall(function()
-                                    for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                                        if v.ToolTip == weapons[current] then
-                                            game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
-                                        end
-                                    end
-                                end)
+                pcall(function()
+                    if workspace.Enemies:FindFirstChild(MMon) then
+                        for _,v in pairs(workspace.Enemies:GetChildren()) do
+                            if v.Name == MMon and v.Humanoid.Health > 0 then
+                                repeat wait()
+                                    AutoHaki()
+                                    StartBring = true
+                                    v.HumanoidRootPart.CanCollide = false
+                                    v.Humanoid.WalkSpeed = 0
+                                    topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                    game.VirtualUser:CaptureController()
+                                    game.VirtualUser:Button1Down(Vector2.new(1280,672))
+                                until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0 or scrapCount >= 10
+                                StartBring = true
                             end
                         end
                     else
-                        -- If it's not a tree quest, then attack the selected mob
-                        pcall(function()
-                            if workspace.Enemies:FindFirstChild(MobName) then
-                                for i, v in pairs(workspace.Enemies:GetChildren()) do
-                                    if v.Name == MobName and v.Humanoid.Health > 0 then
-                                        repeat wait()
-                                            AutoHaki()
-                                            StartBring = true
-                                            PosMon = v.HumanoidRootPart.CFrame
-                                            v.HumanoidRootPart.CanCollide = false
-                                            v.Humanoid.WalkSpeed = 0
-                                            topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                                            game.VirtualUser:CaptureController()
-                                            game.VirtualUser:Button1Down(Vector2.new(1280, 672))
-                                        until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
-                                        StartBring = false
-                                    end
-                                end
-                            else
-                                topos(CFrame.new(5677, 118, 340))
-                            end
-                        end)
-                    end
-                end
-            else
-                -- Farm Scrap Metal if needed
-                local MobName = game.PlaceId == 4442272183 and "Pirate" or "Brute"
-                if game.PlaceId == 4442272183 then
-                    topos(CFrame.new(-4673, 872, -1915))
-                else
-                    topos(CFrame.new(-292, 519, 5357))
-                end
-                pcall(function()
-                    for i, v in pairs(workspace.Enemies:GetChildren()) do
-                        if v.Name == MobName and v.Humanoid.Health > 0 then
-                            repeat wait()
-                                AutoHaki()
-                                StartBring = true
-                                PosMon = v.HumanoidRootPart.CFrame
-                                v.HumanoidRootPart.CanCollide = false
-                                v.Humanoid.WalkSpeed = 0
-                                topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                                game.VirtualUser:CaptureController()
-                                game.VirtualUser:Button1Down(Vector2.new(1280, 672))
-                            until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
-                            StartBring = false
-                        end
+                        topos(MPos)
                     end
                 end)
-            end
-            wait(1)
-        end
-    end)
-
-    -- Farming Scrap Metal Logic
-    spawn(function()
-        while wait(0.1) do
-            if _G.AutoCraftMagnet then
-                for _, gui in ipairs(game.CoreGui:GetDescendants()) do
-                    if gui:IsA("TextLabel") and gui.Text:find("<Scrap Metal>") and not gui:FindFirstChild("AlreadyNotified") then
-                        local tag = Instance.new("BoolValue")
-                        tag.Name = "AlreadyNotified"
-                        tag.Parent = gui
-                        game.StarterGui:SetCore("SendNotification", {
-                            Title = "Scrap Metal",
-                            Text = "+1 Scrap Metal!",
-                            Duration = 2
-                        })
-                    end
+            else
+                if not game.Players.LocalPlayer.PlayerGui:FindFirstChild("QuestGUI") then
+                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest","Red Fire","1")
+                    wait(1)
                 end
-            end
-        end
-    end)
-end)
 
--- Additional Farming for Leather + Scrap Metal
-spawn(function()
-    while wait() do
-        local Leather = CFrame.new(-245.9963836669922, 47.30615234375, 5584.1005859375)
-        if _G.AutoFarmMaterial and _G.SelectMaterial == 'Farm Leather + Scrap Metal' then
-            pcall(function()
-                if BypassTP then
-                    if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - Choccola.Position).Magnitude > 2000 then
-                        BTP(Leather)
-                        wait(.1)
-                        for i = 1, 8 do
-                            game.Players.localPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Choccola)
-                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetSpawnPoint")    
-                            wait(.1)        
+                local QuestTitle = game.Players.LocalPlayer.PlayerGui.QuestGUI.Title.Text
+                local MobName = ""
+                if string.find(QuestTitle,"Venomous Assailant") then
+                    MobName = "Venomous Assailant"
+                elseif string.find(QuestTitle,"Hydra Enforcer") then
+                    MobName = "Hydra Enforcer"
+                elseif string.find(QuestTitle,"Tree") then
+                    MobName = "Tree"
+                end
+
+                if MobName == "Tree" then
+                    local treeList = {
+                        CFrame.new(5343, 1011, 343),
+                        CFrame.new(5359, 1011, 368),
+                        CFrame.new(5269, 1011, 333),
+                        CFrame.new(5223, 1011, 420),
+                        CFrame.new(5240, 1011, 445)
+                    }
+                    local weapons = {"Melee","Sword","Gun"}
+                    local current = 1
+
+                    while _G.AutoCraftMagnet and MobName == "Tree" do
+                        for _,pos in ipairs(treeList) do
+                            topos(pos * CFrame.new(0,10,0))
+                            wait(0.2)
+                            AutoHaki()
+                            game.VirtualUser:CaptureController()
+                            game.VirtualUser:Button1Down(Vector2.new(1280,672))
+                            wait(5)
+                            current = current % #weapons + 1
+                            pcall(function()
+                                for _,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                                    if v.ToolTip == weapons[current] or v.Name == weapons[current] then
+                                        game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
+                                    end
+                                end
+                            end)
                         end
-                    elseif (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - Choccola.Position).Magnitude < 2000 then
-                        TP1(Leather)
                     end
                 else
-                    TP1(Leather)
-                end
-                
-                -- Check if the enemies related to Scrap Metal exist
-                if game:GetService("Workspace").Enemies:FindFirstChild("Pirate Millionaire") or game:GetService("Workspace").Enemies:FindFirstChild("Pistol Billionaire") then
-                    for i, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                        if v.Name == "Pirate Millionaire" or v.Name == "Pistol Billionaire" then
-                            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                                repeat task.wait()
-                                    AutoHaki()
-                                    NeedAttacking = true
-                                    EquipWeapon(_G.SelectWeapon)
-                                    v.HumanoidRootPart.CanCollide = false
-                                    v.Humanoid.WalkSpeed = 0
-                                    v.Head.CanCollide = false 
-                                    StartBring = true
-                                    MonFarm = v.Name                
-                                    PosMon = v.HumanoidRootPart.CFrame
-                                    topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                                    sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                                until not _G.AutoFarmMaterial or not v.Parent or v.Humanoid.Health <= 0 or not _G.SelectMaterial == 'Farm Leather + Scrap Metal'
+                    pcall(function()
+                        if workspace.Enemies:FindFirstChild(MobName) then
+                            for _,v in pairs(workspace.Enemies:GetChildren()) do
+                                if v.Name == MobName and v.Humanoid.Health > 0 then
+                                    repeat wait()
+                                        AutoHaki()
+                                        StartBring = true
+                                        topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                        game.VirtualUser:CaptureController()
+                                        game.VirtualUser:Button1Down(Vector2.new(1280,672))
+                                    until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
+                                    StartBring = false
+                                end
                             end
                         end
-                    end
-                else
-                    StartBring = true
-                    topos(CFrame.new(-245.9963836669922, 47.30615234375, 5584.1005859375))
-                    for i, v in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do 
-                        if v.Name == "Pirate Millionaire" then
-                            topos(v.HumanoidRootPart.CFrame * CFrame.new(2, 20, 2))
-                        elseif v.Name == "Pistol Billionaire" then
-                            topos(v.HumanoidRootPart.CFrame * CFrame.new(2, 20, 2))
-                        end
-                    end
+                    end)
                 end
-            end)
+            end
         end
     end
 end)
