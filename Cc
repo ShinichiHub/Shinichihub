@@ -9125,19 +9125,20 @@ spawn(function()
     while wait(1) do
         if _G.AutoCraftMagnet then
             local scrapCount = 0
-            for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+            for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
                 if v:IsA("Tool") and v.Name == "Scrap Metal" then
                     scrapCount += 1
                 end
             end
 
             if scrapCount > lastScrapCount then
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Shinichi Hub",
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Scrap Metal",
                     Text = "+1 Scrap Metal ("..scrapCount.."/10)",
                     Duration = 2
                 })
             end
+
             lastScrapCount = scrapCount
         end
     end
@@ -9147,7 +9148,7 @@ spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
             local scrapCount = 0
-            for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+            for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
                 if v:IsA("Tool") and v.Name == "Scrap Metal" then
                     scrapCount += 1
                 end
@@ -9169,8 +9170,8 @@ spawn(function()
                 end
 
                 pcall(function()
-                    if game:GetService("Workspace").Enemies:FindFirstChild(MMon) then
-                        for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                    if workspace.Enemies:FindFirstChild(MMon) then
+                        for i,v in pairs(workspace.Enemies:GetChildren()) do
                             if v.Name == MMon and v.Humanoid.Health > 0 then
                                 repeat wait()
                                     AutoHaki()
@@ -9179,8 +9180,8 @@ spawn(function()
                                     v.HumanoidRootPart.CanCollide = false
                                     v.Humanoid.WalkSpeed = 0
                                     topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
-                                    game:GetService("VirtualUser"):CaptureController()
-                                    game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
+                                    game.VirtualUser:CaptureController()
+                                    game.VirtualUser:Button1Down(Vector2.new(1280,672))
                                 until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0 or scrapCount >= 10
                                 StartBring = false
                             end
@@ -9190,12 +9191,12 @@ spawn(function()
                     end
                 end)
             else
-                if not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("QuestGUI") then
-                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest","Red Fire","1")
+                if not game.Players.LocalPlayer.PlayerGui:FindFirstChild("QuestGUI") then
+                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest","Red Fire","1")
                     wait(1)
                 end
 
-                local QuestTitle = game:GetService("Players").LocalPlayer.PlayerGui.QuestGUI.Title.Text
+                local QuestTitle = game.Players.LocalPlayer.PlayerGui.QuestGUI.Title.Text
                 if string.find(QuestTitle,"Venomous Assailant") then
                     MobName = "Venomous Assailant"
                 elseif string.find(QuestTitle,"Hydra Enforcer") then
@@ -9220,8 +9221,8 @@ spawn(function()
                             topos(pos * CFrame.new(0,10,0))
                             wait(0.2)
                             AutoHaki()
-                            game:GetService("VirtualUser"):CaptureController()
-                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
+                            game.VirtualUser:CaptureController()
+                            game.VirtualUser:Button1Down(Vector2.new(1280,672))
                             wait(5)
                             current = current % #weapons + 1
                             pcall(function()
@@ -9235,8 +9236,8 @@ spawn(function()
                     end
                 else
                     pcall(function()
-                        if game:GetService("Workspace").Enemies:FindFirstChild(MobName) then
-                            for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                        if workspace.Enemies:FindFirstChild(MobName) then
+                            for i,v in pairs(workspace.Enemies:GetChildren()) do
                                 if v.Name == MobName and v.Humanoid.Health > 0 then
                                     repeat wait()
                                         AutoHaki()
@@ -9245,8 +9246,8 @@ spawn(function()
                                         v.HumanoidRootPart.CanCollide = false
                                         v.Humanoid.WalkSpeed = 0
                                         topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
-                                        game:GetService("VirtualUser"):CaptureController()
-                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
+                                        game.VirtualUser:CaptureController()
+                                        game.VirtualUser:Button1Down(Vector2.new(1280,672))
                                     until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
                                     StartBring = false
                                 end
