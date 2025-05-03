@@ -9113,104 +9113,44 @@ spawn(function()
     end);
 end);
 
-   _G.SelectQuestDragon = "Venomous Assailant"
-  Dragon:Dropdown("Select Mob Quest",{"Venomous Assailant","Hydra Enforcer"},{"Venomous Assailant"},function(v)
-    _G.SelectQuestDragon = v
-     end)
-
-   Dragon:Toggle("Auto Farm Mob Quest", false,function(Values)      
-          _G.AutoMobDragon = Values
-          _G.AutoBlazeEmber = Values
-          StopTween(_G.AutoMobDragon)          
-       end)
-       
-       spawn(function()
-        while wait() do
-            if _G.AutoMobDragon then
-                pcall(function()
-                    if game:GetService("Workspace").Enemies:FindFirstChild(_G.SelectQuestDragon) then
-                        for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                            if v.Name == _G.SelectQuestDragon then
-                                if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                                    repeat task.wait()
-                                        AutoHaki()
-                                        EquipWeapon(_G.SelectWeapon)
-                                        v.HumanoidRootPart.CanCollide = false
-                                        v.Humanoid.WalkSpeed = 0
-                                        StartBring = true
-                                        PosMon = v.HumanoidRootPart.CFrame
-                                        v.HumanoidRootPart.Size = Vector3.new(80,80,80)                             
-                                        topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                                        game:GetService("VirtualUser"):CaptureController()
-                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
-                                    until not _G.AutoMobDragon or not v.Parent or v.Humanoid.Health <= 0
-                                    StartBring = false
-                                end
-                            end
-                        end
-                    else
-                        if game:GetService("ReplicatedStorage"):FindFirstChild(_G.SelectQuestDragon) then
-                            topos(game:GetService("ReplicatedStorage"):FindFirstChild(_G.SelectQuestDragon).HumanoidRootPart.CFrame * CFrame.new(5,10,2))
-                        end
-                    end
-                end)
-            end
-        end
-    end)
-    spawn(function()
-    while wait() do
-        if _G.AutoBlazeEmber then
-            pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/DragonDojoEmber"):FireServer();
-            end);
-        end
-    end
-end);
-
    Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoCraftMagnet = state
     _G.AutoFarmMaterial = state
-    _G.AutoReceiveQuest = state
-    _G.AutoMobDragon = state
-    _G.AutoBlazeEmber = state
+    _G.DoneFarmingScrap = false
 end)
 
 spawn(function()
-    while wait() do 
-        local Leather = CFrame.new(-967.433105, 13.5999937, 4034.24707)
-        if _G.AutoFarmMaterial and not _G.DoneFarmingScrap then
+    while wait() do
+        if _G.AutoCraftMagnet and not _G.DoneFarmingScrap then
             pcall(function()
-                local count = 0
-                for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                local scrapCount = 0
+                for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
                     if v.Name == "Scrap Metal" then
-                        count = count + v:FindFirstChild("Count").Value
+                        scrapCount = scrapCount + (v:FindFirstChild("Count") and v.Count.Value or 1)
                     end
                 end
 
-                if count >= 10 then
+                if scrapCount >= 10 then
                     _G.DoneFarmingScrap = true
                     return
                 end
 
-                TP1(Leather)
-                if game.Workspace.Enemies:FindFirstChild("Pirate") or game.Workspace.Enemies:FindFirstChild("Brute") then
-                    for i,v in pairs(game.Workspace.Enemies:GetChildren()) do
-                        if v.Name == "Pirate" or v.Name == "Brute" then
-                            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                                repeat task.wait()
-                                    AutoHaki()
-                                    NeedAttacking = true
-                                    v.HumanoidRootPart.CanCollide = false
-                                    v.Humanoid.WalkSpeed = 0
-                                    v.Head.CanCollide = false 
-                                    StartBring = true
-                                    MonFarm = v.Name                
-                                    PosMon = v.HumanoidRootPart.CFrame
-                                    topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                                    sethiddenproperty(game.Players.LocalPlayer,"SimulationRadius",math.huge)
-                                until not _G.AutoFarmMaterial or not v.Parent or v.Humanoid.Health <= 0 or _G.DoneFarmingScrap
-                                StartBring = false
-                            end
+                local leatherPos = CFrame.new(-967.43, 13.6, 4034.24)
+                TP1(leatherPos)
+
+                for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
+                    if v.Name == "Pirate" or v.Name == "Brute" then
+                        if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                            repeat wait()
+                                AutoHaki()
+                                v.HumanoidRootPart.CanCollide = false
+                                v.Humanoid.WalkSpeed = 0
+                                v.Head.CanCollide = false
+                                StartBring = true
+                                PosMon = v.HumanoidRootPart.CFrame
+                                topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                            until not _G.AutoFarmMaterial or not v.Parent or v.Humanoid.Health <= 0 or _G.DoneFarmingScrap
+                            StartBring = false
                         end
                     end
                 end
@@ -9225,7 +9165,8 @@ spawn(function()
             pcall(function()
                 game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(5661.53, 1013.09, -334.96))
                 Tween2(CFrame.new(5814.42, 1208.32, 884.57))
-                local args = { [1] = { Context = "RequestQuest" } }
+
+                local args = { { Context = "RequestQuest" } }
                 game.ReplicatedStorage.Modules.Net["RF/DragonHunter"]:InvokeServer(unpack(args))
             end)
         end
@@ -9236,33 +9177,31 @@ spawn(function()
     while wait() do
         if _G.AutoCraftMagnet and _G.DoneFarmingScrap then
             pcall(function()
-                local questStatus = { [1] = { Context = "Check" } }
-                local result = game.ReplicatedStorage.Modules.Net["RF/DragonHunter"]:InvokeServer(unpack(questStatus))
-                if typeof(result) == "table" then
-                    for _, v in pairs(result) do
+                local checkQuest = { { Context = "Check" } }
+                local quest = game.ReplicatedStorage.Modules.Net["RF/DragonHunter"]:InvokeServer(unpack(checkQuest))
+                if typeof(quest) == "table" then
+                    for _, line in pairs(quest) do
                         local target = nil
-                        if v == "Defeat 3 Venomous Assailants on Hydra Island." then
+                        if line == "Defeat 3 Venomous Assailants on Hydra Island." then
                             target = "Venomous Assailant"
-                        elseif v == "Defeat 3 Hydra Enforcers on Hydra Island." then
+                        elseif line == "Defeat 3 Hydra Enforcers on Hydra Island." then
                             target = "Hydra Enforcer"
                         end
                         if target then
-                            if game.Workspace.Enemies:FindFirstChild(target) then
-                                for i,v in pairs(game.Workspace.Enemies:GetChildren()) do
-                                    if v.Name == target and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                                        repeat task.wait()
-                                            AutoHaki()
-                                            v.HumanoidRootPart.CanCollide = false
-                                            v.Humanoid.WalkSpeed = 0
-                                            StartBring = true
-                                            PosMon = v.HumanoidRootPart.CFrame
-                                            v.HumanoidRootPart.Size = Vector3.new(80,80,80)
-                                            topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                                            game:GetService("VirtualUser"):CaptureController()
-                                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
-                                        until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
-                                        StartBring = false
-                                    end
+                            for _, mob in pairs(game.Workspace.Enemies:GetChildren()) do
+                                if mob.Name == target and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                                    repeat wait()
+                                        AutoHaki()
+                                        mob.HumanoidRootPart.CanCollide = false
+                                        mob.Humanoid.WalkSpeed = 0
+                                        StartBring = true
+                                        PosMon = mob.HumanoidRootPart.CFrame
+                                        mob.HumanoidRootPart.Size = Vector3.new(80, 80, 80)
+                                        topos(mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                        game.VirtualUser:CaptureController()
+                                        game.VirtualUser:Button1Down(Vector2.new(1280, 672))
+                                    until not _G.AutoCraftMagnet or not mob.Parent or mob.Humanoid.Health <= 0
+                                    StartBring = false
                                 end
                             end
                         end
@@ -9275,7 +9214,7 @@ end)
 
 spawn(function()
     while wait() do
-        if _G.AutoCraftMagnet and _G.AutoBlazeEmber then
+        if _G.AutoCraftMagnet and _G.DoneFarmingScrap then
             pcall(function()
                 game.ReplicatedStorage.Modules.Net["RE/DragonDojoEmber"]:FireServer()
             end)
