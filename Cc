@@ -9167,57 +9167,50 @@ end);
     end
 end);
 
-   Dragon:Toggle("Auto Attack Hydra Mob And Collect Ember", false, function(value)
-    getgenv().BlazeEmberFarm = value
-    StopTween(getgenv().BlazeEmberFarm)
-end)
+   Dragon:Toggle("Get Quest Red Fire", false, function(value)
+    _G.AutoReceiveQuest = value
 
-spawn(function()
-    while task.wait(0.2) do
-        if getgenv().BlazeEmberFarm and World3 then
+    if value then
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(5661.5322265625, 1013.0907592773438, -334.9649963378906))
+        Tween2(CFrame.new(5814.42724609375, 1208.3267822265625, 884.5785522460938))
+
+        spawn(function()
+            while _G.AutoReceiveQuest and wait() do
+                pcall(function()
+                    game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({
+                        { Context = "RequestQuest" }
+                    })
+                    game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({
+                        { Context = "Check" }
+                    })
+                end)
+            end
+        end)
+
+        -- Theo dõi và hiển thị tình trạng nhiệm vụ
+        spawn(function()
             pcall(function()
-                local workspaceEnemies = game:GetService('Workspace').Enemies
-                local playerRoot = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                local ghost = workspaceEnemies:FindFirstChild('Ghost')
-                local hydraEnforcer = workspaceEnemies:FindFirstChild('Hydra Enforcer')
-                local venomousAssailant = workspaceEnemies:FindFirstChild('Venomous Assailant')
+                while _G.AutoReceiveQuest and wait() do
+                    local status = game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({
+                        { Context = "Check" }
+                    })
 
-                if ghost or hydraEnforcer or venomousAssailant then
-                    for _, v in pairs(workspaceEnemies:GetChildren()) do
-                        if v.Name == 'Hydra Enforcer' or v.Name == 'Venomous Assailant' then
-                            if v:FindFirstChild('Humanoid') and v:FindFirstChild('HumanoidRootPart') and v.Humanoid.Health > 0 then
-                                repeat 
-                                    game:GetService("RunService").Heartbeat:Wait()
-                                    AutoHaki()
-                                    EquipWeapon(getgenv().SelectWeapon)
-                                    topos(v.HumanoidRootPart.CFrame * Pos)
-                                    getgenv().StartMagnet = true
-
-                                    if v.HumanoidRootPart.CanCollide then
-                                        v.HumanoidRootPart.CanCollide = false
-                                    end
-                                    if v.HumanoidRootPart.Size ~= Vector3.new(60, 60, 60) then
-                                        v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
-                                    end
-                                    if v.HumanoidRootPart.Transparency ~= 1 then
-                                        v.HumanoidRootPart.Transparency = 1
-                                    end
-
-                                    MonFarm = v.Name
-                                    PosMon = v.HumanoidRootPart.CFrame
-                                until not getgenv().BlazeEmberFarm or v.Humanoid.Health <= 0
+                    if typeof(status) == "table" then
+                        for _, text in pairs(status) do
+                            if text:find("Defeat 3 Venomous Assailants") then
+                                Dragon:SetDesc("Defeat 3 Venomous Assailants on Hydra Island.")
+                            elseif text:find("Defeat 3 Hydra Enforcers") then
+                                Dragon:SetDesc("Defeat 3 Hydra Enforcers on Hydra Island.")
+                            elseif text:find("Destroy 10 trees") then
+                                Dragon:SetDesc("Destroy 10 trees on Hydra Island.")
                             end
                         end
                     end
-                else
-                    topos(CFrame.new(5394.36475, 1082.71057, 561.993958, -0.62453711, 3.17826405e-08, -0.780995131, 6.77530991e-08, 1, -1.34849545e-08, 0.780995131, -6.13366922e-08, -0.62453711))
                 end
             end)
-        end
+        end)
     end
 end)
-
-
 
    Dragon:Button("Craft Volcanic Magnet",function()
     local args = {
