@@ -9116,6 +9116,10 @@ _G.AutoCraftMagnet = false
 _G.AutoFarmMaterial = false
 _G.AutoFarmMaterial = false
 
+_G.AutoCraftMagnet = false
+_G.AutoFarmMaterial = false
+_G.AutoFarmMaterial = false
+
 Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoCraftMagnet = state
     _G.AutoFarmMaterial = state
@@ -9189,8 +9193,8 @@ spawn(function()
 
             if ScrapMetalCount >= 10 then
                 _G.AutoFarmMaterial = false
-                FindAndAttack("Venomous Assailant")
-                FindAndAttack("Hydra Enforcer")
+                -- Call function to start quest with Dragon Hunter NPC
+                StartDragonHunterQuest()
             else
                 _G.AutoFarmMaterial = true
             end
@@ -9198,48 +9202,51 @@ spawn(function()
     end
 end)
 
-function FindAndAttack(monsterName)
-    spawn(function()
-        while wait() do
-            local monster = game:GetService("Workspace").Enemies:FindFirstChild(monsterName)
-            if monster and monster:FindFirstChild("Humanoid") and monster:FindFirstChild("HumanoidRootPart") then
-                repeat task.wait()
-                    AutoHaki()
-                    NeedAttacking = true
-                    EquipWeapon(_G.SelectWeapon)
-                    monster.HumanoidRootPart.CanCollide = false
-                    monster.Humanoid.WalkSpeed = 0
-                    monster.Head.CanCollide = false
-                    StartBring = true
-                    MonFarm = monster.Name
-                    PosMon = monster.HumanoidRootPart.CFrame
-                    topos(monster.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                    sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                until not monster.Parent or monster.Humanoid.Health <= 0
+function StartDragonHunterQuest()
+    local dragonHunterNPC = game:GetService("Workspace").NPCs:FindFirstChild("Dragon Hunter")
+    if dragonHunterNPC then
+        -- Move to Dragon Hunter NPC
+        pcall(function()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = dragonHunterNPC.HumanoidRootPart.CFrame
+        end)
+        
+        -- Wait for NPC interaction
+        wait(1)
+
+        -- Trigger NPC interaction (click on the NPC to start quest)
+        local npcDialog = dragonHunterNPC:FindFirstChild("Dialog")
+        if npcDialog and npcDialog:FindFirstChild("Hunt") then
+            -- Click on 'Hunt' option to accept the quest
+            npcDialog.Hunt:Click()
+
+            -- Wait for confirmation dialog and press "Sure"
+            wait(2)
+            local confirmButton = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ConfirmButton")
+            if confirmButton then
+                confirmButton:Click()
             end
         end
-    end)
+    end
+end
+
+function CollectRedEmber()
+    -- Logic to automatically collect the red ember
+    local ember = game:GetService("Workspace").RedEmber:FindFirstChild("Red Ember")
+    if ember then
+        -- Move towards the ember and collect it
+        pcall(function()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = ember.CFrame
+            wait(1)
+            ember:Click()
+        end)
+    end
 end
 
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
-            if game:GetService("Workspace").Enemies:FindFirstChild("Hydra Enforcer") then
-                local hydraEnforcer = game:GetService("Workspace").Enemies:FindFirstChild("Hydra Enforcer")
-                if hydraEnforcer and hydraEnforcer:FindFirstChild("Humanoid") then
-                    repeat task.wait()
-                        AutoHaki()
-                        EquipWeapon(_G.SelectWeapon)
-                        hydraEnforcer.HumanoidRootPart.CanCollide = false
-                        hydraEnforcer.Humanoid.WalkSpeed = 0
-                        hydraEnforcer.Head.CanCollide = false
-                        StartBring = true
-                        MonFarm = hydraEnforcer.Name
-                        PosMon = hydraEnforcer.HumanoidRootPart.CFrame
-                        topos(hydraEnforcer.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                        sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                    until not hydraEnforcer.Parent or hydraEnforcer.Humanoid.Health <= 0
-                end
+            if game:GetService("Workspace").RedEmber:FindFirstChild("Red Ember") then
+                CollectRedEmber()
             end
         end
     end
