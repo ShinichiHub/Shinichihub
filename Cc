@@ -9046,61 +9046,49 @@ _G.AutoCraftMagnet = false
 
 Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoCraftMagnet = state
-    _G.AutoFarmMaterial = state
 end)
 
--- Hàm đếm Scrap Metal trong giao diện Items > Valuable
-function getScrapCount()
+function CheckScrapCount()
+    local val = require(game:GetService("ReplicatedStorage"):WaitForChild("DataManager")):Get("Items")
     local count = 0
-    local valFrame = game.Players.LocalPlayer.PlayerGui.Main.Inventory.Frame.Items.VisibleFrame
-    for _, item in pairs(valFrame:GetChildren()) do
-        if item:IsA("ImageButton") and item:FindFirstChild("Amount") and item.Name == "Scrap Metal" then
-            local amtText = item.Amount.Text
-            local num = tonumber(string.match(amtText, "%d+"))
-            if num then count = count + num end
+    for _, item in pairs(val) do
+        if item.Name == "Scrap Metal" then
+            count = item.Count or 0
+            break
         end
     end
     return count
 end
 
--- Hiển thị thông báo khi nhặt được Scrap Metal
-spawn(function()
-    while wait() do
-        if _G.AutoCraftMagnet then
-            for _,v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                if v:IsA("TextLabel") and string.find(v.Text, "Obtained <Scrap Metal>") then
-                    game.StarterGui:SetCore("SendNotification", {
-                        Title = "Scrap Metal",
-                        Text = "+1 Scrap Metal",
-                        Duration = 2
-                    })
-                    wait(1.5)
-                    break
-                end
-            end
+function AutoHaki()
+    local Haki = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+end
+
+function EquipWeapon(name)
+    for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+        if v:IsA("Tool") and v.Name == name then
+            game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
         end
     end
-end)
+end
 
--- Tự động farm Scrap Metal và làm nhiệm vụ Red Fire
 spawn(function()
     while wait() do
         if _G.AutoCraftMagnet then
-            local scrapCount = getScrapCount()
+            local scrapCount = CheckScrapCount()
 
             if scrapCount < 10 then
+                -- Farm Scrap Metal
+                local MMon, MPos
                 if game.PlaceId == 2753915549 then
                     MMon = "Pirate"
                     MPos = CFrame.new(-967.433105, 13.5999937, 4034.24707)
-                    SP = "Pirate"
                 elseif game.PlaceId == 4442272183 then
                     MMon = "Mercenary"
                     MPos = CFrame.new(-986.774475, 72.8755951, 1088.44653)
-                    SP = "DressTown"
                 elseif game.PlaceId == 7449423635 then
                     MMon = "Pirate Millionaire"
                     MPos = CFrame.new(-118.809372, 55.4874573, 5649.17041)
-                    SP = "Default"
                 end
 
                 pcall(function()
@@ -9109,34 +9097,45 @@ spawn(function()
                             if v.Name == MMon and v.Humanoid.Health > 0 then
                                 repeat wait()
                                     AutoHaki()
-                                    StartBring = true
-                                    PosMon = v.HumanoidRootPart.CFrame
                                     v.HumanoidRootPart.CanCollide = false
                                     v.Humanoid.WalkSpeed = 0
                                     topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
                                     game.VirtualUser:CaptureController()
                                     game.VirtualUser:Button1Down(Vector2.new(1280,672))
-                                until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0 or getScrapCount() >= 10
-                                StartBring = false
+                                until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0 or CheckScrapCount() >= 10
                             end
                         end
                     else
                         topos(MPos)
                     end
                 end)
+
             else
+                -- Farm Red Fire Quest
                 if not game.Players.LocalPlayer.PlayerGui:FindFirstChild("QuestGUI") then
-                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest","Red Fire","1")
+                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(5661.532, 1013.09, -334.964))
+                    Tween2(CFrame.new(5814.427, 1208.326, 884.579))
+                    wait(1)
+
+                    local req = { [1] = { Context = "RequestQuest" } }
+                    game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer(unpack(req))
                     wait(1)
                 end
 
-                local QuestTitle = game.Players.LocalPlayer.PlayerGui.QuestGUI.Title.Text
-                if string.find(QuestTitle,"Venomous Assailant") then
-                    MobName = "Venomous Assailant"
-                elseif string.find(QuestTitle,"Hydra Enforcer") then
-                    MobName = "Hydra Enforcer"
-                elseif string.find(QuestTitle,"Tree") or string.find(QuestTitle,"Defeat 10 Tree") then
-                    MobName = "Tree"
+                local check = { [1] = { Context = "Check" } }
+                local result = game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer(unpack(check))
+                local MobName
+
+                if typeof(result) == "table" then
+                    for _, v in pairs(result) do
+                        if string.find(v, "Venomous Assailants") then
+                            MobName = "Venomous Assailant"
+                        elseif string.find(v, "Hydra Enforcers") then
+                            MobName = "Hydra Enforcer"
+                        elseif string.find(v, "Destroy 10 trees") then
+                            MobName = "Tree"
+                        end
+                    end
                 end
 
                 if MobName == "Tree" then
@@ -9159,31 +9158,23 @@ spawn(function()
                             game.VirtualUser:Button1Down(Vector2.new(1280,672))
                             wait(5)
                             current = current % #weapons + 1
-                            pcall(function()
-                                for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                                    if v.ToolTip == weapons[current] then
-                                        game.Players.LocalPlayer.Character.Humanoid:EquipTool(v)
-                                    end
-                                end
-                            end)
+                            EquipWeapon(weapons[current])
                         end
                     end
-                else
+
+                elseif MobName then
                     pcall(function()
                         if workspace.Enemies:FindFirstChild(MobName) then
                             for i,v in pairs(workspace.Enemies:GetChildren()) do
                                 if v.Name == MobName and v.Humanoid.Health > 0 then
                                     repeat wait()
                                         AutoHaki()
-                                        StartBring = true
-                                        PosMon = v.HumanoidRootPart.CFrame
                                         v.HumanoidRootPart.CanCollide = false
                                         v.Humanoid.WalkSpeed = 0
                                         topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
                                         game.VirtualUser:CaptureController()
                                         game.VirtualUser:Button1Down(Vector2.new(1280,672))
                                     until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
-                                    StartBring = false
                                 end
                             end
                         else
