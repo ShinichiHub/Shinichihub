@@ -9112,6 +9112,7 @@ spawn(function()
         end
     end);
 end);
+
 _G.AutoCraftMagnet = false
 
 Dragon:Toggle("Auto Craft Magnet", false, function(state)
@@ -9119,27 +9120,20 @@ Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoFarmMaterial = state
 end)
 
-local lastScrapCount = 0
-
 spawn(function()
-    while wait(1) do
+    while wait() do
         if _G.AutoCraftMagnet then
-            local scrapCount = 0
-            for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                if v:IsA("Tool") and v.Name == "Scrap Metal" then
-                    scrapCount += 1
+            local gui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+            for _,v in pairs(gui:GetDescendants()) do
+                if v:IsA("TextLabel") and string.find(v.Text, "Obtained <Scrap Metal>") then
+                    game.StarterGui:SetCore("SendNotification", {
+                        Title = "Scrap Metal",
+                        Text = "+1 Scrap Metal",
+                        Duration = 2
+                    })
+                    wait(1.5)
                 end
             end
-
-            if scrapCount > lastScrapCount then
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Scrap Metal",
-                    Text = "+1 Scrap Metal ("..scrapCount.."/10)",
-                    Duration = 2
-                })
-            end
-
-            lastScrapCount = scrapCount
         end
     end
 end)
