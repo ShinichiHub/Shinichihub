@@ -9113,14 +9113,12 @@ spawn(function()
     end);
 end);
 
-   _G.AutoCraftMagnet = false
-_G.AutoFarmMaterial = false
+  _G.AutoCraftMagnet = false
 _G.Weapons = {"Melee", "Sword", "Gun"}
-local CurrentWeapon = 3
+local CurrentWeapon = 1
 
 Dragon:Toggle("Auto Craft Magnet", false, function(state)
     _G.AutoCraftMagnet = state
-    _G.AutoFarmMaterial = state
 end)
 
 function RotateWeapon()
@@ -9134,77 +9132,77 @@ end
 local TreeCFrames = {
     CFrame.new(5342.95312, 1011.26703, 343.493988, -0.838688731, 0, -0.544611216, 0, 1, 0, 0.544611216, 0, -0.838688731),
     CFrame.new(5359.29004, 1011.26703, 368.653992, -0.838688731, 0, -0.544611216, 0, 1, 0, 0.544611216, 0, -0.838688731),
-    CFrame.new(5269.84424, 1011.26703, 333.738007, 0.544665456, -0, -0.838653445, 0, 1, -0, 0.838653445, 0, 0.544665456),
+    CFrame.new(5269.84424, 1011.26703, 333.738007, 0.544665456, 0, -0.838653445, 0, 1, 0, 0.838653445, 0, 0.544665456),
     CFrame.new(5223.85791, 1011.26703, 420.833008, -0.838688731, 0, -0.544611216, 0, 1, 0, 0.544611216, 0, -0.838688731),
     CFrame.new(5240.19678, 1011.26703, 445.992004, -0.838688731, 0, -0.544611216, 0, 1, 0, 0.544611216, 0, -0.838688731),
 }
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         if _G.AutoCraftMagnet then
             local scrap = 0
-            for i,v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
-                if v:IsA("Tool") and v.Name == "Scrap Metal" then
+            for _, item in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+                if item:IsA("Tool") and item.Name == "Scrap Metal" then
                     scrap = scrap + 1
                 end
             end
 
             if scrap < 10 then
-                local Leather = CFrame.new(-967.433105, 13.5999937, 4034.24707, -0.258864403, 0, -0.965913713, 0, 1, 0, 0.965913713, 0, -0.258864403)
+                local Leather = CFrame.new(-967.433105, 13.5999937, 4034.24707)
                 pcall(function()
                     TP1(Leather)
-                    if game.Workspace.Enemies:FindFirstChild("Pirate") or game.Workspace.Enemies:FindFirstChild("Brute") then
-                        for i,v in pairs(game.Workspace.Enemies:GetChildren()) do
-                            if (v.Name == "Pirate" or v.Name == "Brute") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                                repeat wait()
-                                    AutoHaki()
-                                    EquipWeapon("Melee")
-                                    v.HumanoidRootPart.CanCollide = false
-                                    v.Humanoid.WalkSpeed = 0
-                                    StartBring = true
-                                    topos(v.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                                until not _G.AutoCraftMagnet or v.Humanoid.Health <= 0
-                                StartBring = false
-                            end
+                    for _, mob in pairs(game.Workspace.Enemies:GetChildren()) do
+                        if (mob.Name == "Pirate" or mob.Name == "Brute") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                            repeat task.wait()
+                                AutoHaki()
+                                EquipWeapon("Melee")
+                                mob.HumanoidRootPart.CanCollide = false
+                                mob.Humanoid.WalkSpeed = 0
+                                StartBring = true
+                                topos(mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                            until not _G.AutoCraftMagnet or mob.Humanoid.Health <= 0 or not mob.Parent
+                            StartBring = false
                         end
                     end
                 end)
             else
-                local questCheck = game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({{Context="Check"}})
-                if typeof(questCheck) == "table" then
-                    local task = tostring(questCheck[1])
-                    if string.find(task, "Venomous Assailants") then
-                        _G.SelectQuestDragon = "Venomous Assailant"
-                    elseif string.find(task, "Hydra Enforcers") then
-                        _G.SelectQuestDragon = "Hydra Enforcer"
-                    elseif string.find(task, "Destroy 10 trees") then
-                        _G.SelectQuestDragon = "Tree"
-                    else
-                        game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({{Context="RequestQuest"}})
-                        wait(2)
-                    end
-
-                    if _G.SelectQuestDragon == "Tree" then
+                local quest = game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({{Context="Check"}})
+                if typeof(quest) == "table" and quest[1] then
+                    local task = tostring(quest[1])
+                    if string.find(task, "Destroy 10 trees") then
                         for _, cf in ipairs(TreeCFrames) do
                             if not _G.AutoCraftMagnet then break end
                             topos(cf)
                             AutoHaki()
                             EquipWeapon(_G.Weapons[CurrentWeapon])
                             game:GetService("VirtualUser"):CaptureController()
-                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
+                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
                             wait(5)
                             RotateWeapon()
                         end
-                    else
-                        for i,v in pairs(game.Workspace.Enemies:GetChildren()) do
-                            if v.Name == _G.SelectQuestDragon and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                    elseif string.find(task, "Venomous Assailants") then
+                        for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
+                            if enemy.Name == "Venomous Assailant" and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                                 repeat wait()
                                     AutoHaki()
                                     EquipWeapon("Melee")
-                                    topos(v.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
-                                until not _G.AutoCraftMagnet or not v.Parent or v.Humanoid.Health <= 0
+                                    topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                until not _G.AutoCraftMagnet or enemy.Humanoid.Health <= 0 or not enemy.Parent
                             end
                         end
+                    elseif string.find(task, "Hydra Enforcers") then
+                        for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
+                            if enemy.Name == "Hydra Enforcer" and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                                repeat wait()
+                                    AutoHaki()
+                                    EquipWeapon("Melee")
+                                    topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                until not _G.AutoCraftMagnet or enemy.Humanoid.Health <= 0 or not enemy.Parent
+                            end
+                        end
+                    else
+                        game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({{Context="RequestQuest"}})
+                        wait(2)
                     end
                 end
             end
