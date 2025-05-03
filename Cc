@@ -9167,48 +9167,97 @@ end);
     end
 end);
 
-   Dragon:Toggle("Get Quest Red Fire", false, function(value)
-    _G.AutoReceiveQuest = value
+   _G.AutoFarmMaterial = true
+_G.SelectMaterial = 'Farm Leather + Scrap Metal'
+_G.AutoMobDragon = false
+_G.SelectQuestDragon = nil
+_G.AutoReceiveQuest = false
 
-    if value then
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(5661.5322265625, 1013.0907592773438, -334.9649963378906))
-        Tween2(CFrame.new(5814.42724609375, 1208.3267822265625, 884.5785522460938))
+local function HasEnoughScrapMetal()
+    local count = 0
+    for _, v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+        if v:IsA("Tool") and v.Name == "Scrap Metal" then
+            count = count + 1
+        end
+    end
+    return count >= 10
+end
 
-        spawn(function()
-            while _G.AutoReceiveQuest and wait() do
-                pcall(function()
-                    game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({
-                        { Context = "RequestQuest" }
-                    })
-                    game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({
-                        { Context = "Check" }
-                    })
-                end)
-            end
-        end)
-
-        -- Theo dõi và hiển thị tình trạng nhiệm vụ
-        spawn(function()
+spawn(function()
+    while task.wait() do
+        if _G.AutoFarmMaterial and _G.SelectMaterial == 'Farm Leather + Scrap Metal' and not HasEnoughScrapMetal() then
             pcall(function()
-                while _G.AutoReceiveQuest and wait() do
-                    local status = game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/DragonHunter"):InvokeServer({
-                        { Context = "Check" }
-                    })
-
-                    if typeof(status) == "table" then
-                        for _, text in pairs(status) do
-                            if text:find("Defeat 3 Venomous Assailants") then
-                                Dragon:SetDesc("Defeat 3 Venomous Assailants on Hydra Island.")
-                            elseif text:find("Defeat 3 Hydra Enforcers") then
-                                Dragon:SetDesc("Defeat 3 Hydra Enforcers on Hydra Island.")
-                            elseif text:find("Destroy 10 trees") then
-                                Dragon:SetDesc("Destroy 10 trees on Hydra Island.")
-                            end
+                for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                    if mob.Name == "Pirate" or mob.Name == "Brute" then
+                        if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                            repeat task.wait()
+                                AutoHaki()
+                                mob.HumanoidRootPart.CanCollide = false
+                                mob.Humanoid.WalkSpeed = 0
+                                StartBring = true
+                                topos(mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+                            until not _G.AutoFarmMaterial or not mob.Parent or mob.Humanoid.Health <= 0 or HasEnoughScrapMetal()
+                            StartBring = false
                         end
                     end
                 end
             end)
-        end)
+        end
+    end
+end)
+
+spawn(function()
+    while task.wait() do
+        if HasEnoughScrapMetal() then
+            _G.AutoMobDragon = true
+            _G.AutoReceiveQuest = true
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(5661, 1013, -335))
+            Tween2(CFrame.new(5814, 1208, 884))
+        end
+    end
+end)
+
+spawn(function()
+    while wait() do
+        if _G.AutoReceiveQuest then
+            pcall(function()
+                local args = {{Context = "RequestQuest"}}
+                game:GetService("ReplicatedStorage").Modules.Net["RF/DragonHunter"]:InvokeServer(unpack(args))
+            end)
+        end
+    end
+end)
+
+spawn(function()
+    while wait() do
+        if _G.AutoMobDragon then
+            pcall(function()
+                local quest = game:GetService("ReplicatedStorage").Modules.Net["RF/DragonHunter"]:InvokeServer({{Context = "Check"}})
+                if typeof(quest) == "table" then
+                    for _, v in pairs(quest) do
+                        if v:find("Venomous Assailants") then
+                            _G.SelectQuestDragon = "Venomous Assailant"
+                        elseif v:find("Hydra Enforcers") then
+                            _G.SelectQuestDragon = "Hydra Enforcer"
+                        end
+                    end
+                end
+
+                for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                    if mob.Name == _G.SelectQuestDragon and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                        repeat task.wait()
+                            AutoHaki()
+                            mob.HumanoidRootPart.CanCollide = false
+                            mob.Humanoid.WalkSpeed = 0
+                            topos(mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                            game:GetService("VirtualUser"):CaptureController()
+                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280,672))
+                        until not _G.AutoMobDragon or not mob.Parent or mob.Humanoid.Health <= 0
+                    end
+                end
+            end)
+        end
     end
 end)
 
